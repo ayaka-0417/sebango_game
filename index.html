@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>背番号足し算ゲーム</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    img { margin: 10px; border: 2px solid #333; display:block; margin-left:auto; margin-right:auto; }
+    .player-info { font-weight: bold; margin-bottom: 20px; }
+    input { font-size: 18px; padding: 5px; }
+    button { font-size: 18px; padding: 5px 10px; margin: 5px; }
+    #gameover { font-size: 22px; font-weight: bold; color: darkred; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>プロ野球 背番号足し算ゲーム</h1>
+
+  <div id="status">
+    <p>問題 <span id="currentQ">1</span> / 10</p>
+    <p>スコア: <span id="score">0</span></p>
+  </div>
+
+  <div id="quiz">
+    <div>
+      <img id="player1" width="150">
+      <div id="player1-info" class="player-info"></div>
+    </div>
+    <span id="operator">+</span>
+    <div>
+      <img id="player2" width="150">
+      <div id="player2-info" class="player-info"></div>
+    </div>
+  </div>
+
+  <div>
+    <input type="number" id="answer" placeholder="答えを入力">
+    <button onclick="checkAnswer()">解答！</button>
+    <button onclick="nextQuestion()">次の問題</button>
+  </div>
+
+  <p id="result"></p>
+  <div id="gameover"></div>
+
+  <script>
+    const players = [
+      {name:"渡部 遼人", number:0, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/0.jpg"},
+{name:"若月 健矢", number:2, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/2.jpg"},
+{name:"森 友哉", number:4, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/4.jpg"},
+{name:"西野 真弘", number:5, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/5.jpg"},
+{name:"宗 佑磨", number:6, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/6.jpg"},
+{name:"西川 龍馬", number:7, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/7.jpg"},
+{name:"野口 智哉", number:9, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/9.jpg"},
+{name:"大城 滉二", number:10, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/10.jpg"},
+{name:"山下 舜平大", number:11, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/11.jpg"},
+{name:"東 晃平", number:12, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/12.jpg"},
+{name:"宇田川 優希", number:14, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/14.jpg"},
+{name:"平野 佳寿", number:16, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/16.jpg"},
+{name:"曽谷 龍平", number:17, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/17.jpg"},
+{name:"宮城 大弥", number:18, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/18.jpg"},
+{name:"山岡 泰輔", number:19, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/19.jpg"},
+{name:"阿部 翔太", number:20, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/20.jpg"},
+{name:"山﨑 颯一郎", number:21, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/21.jpg"},
+{name:"九里 亜蓮", number:22, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/22.jpg"},
+{name:"吉田 輝星", number:23, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/23.jpg"},
+{name:"紅林 弘太郎", number:24, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/24.jpg"},
+{name:"富山 凌雅", number:28, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/28.jpg"},
+{name:"田嶋 大樹", number:29, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/29.jpg"},
+{name:"廣岡 大志", number:30, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/30.jpg"},
+{name:"太田 椋", number:31, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/31.jpg"},
+{name:"福永 奨", number:32, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/32.jpg"},
+{name:"古田島 成龍", number:35, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/35.jpg"},
+{name:"石川 亮", number:37, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/37.jpg"},
+{name:"来田 涼斗", number:38, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/38.jpg"},
+{name:"岩嵜 翔", number:40, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/40.jpg"},
+{name:"佐野 皓大", number:41, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/41.jpg"},
+{name:"Ａ．マチャド", number:42, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/42.jpg"},
+{name:"頓宮 裕真", number:44, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/44.jpg"},
+{name:"本田 仁海", number:46, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/46.jpg"},
+{name:"小木田 敦也", number:56, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/56.jpg"},
+{name:"山田 修義", number:57, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/57.jpg"},
+{name:"井口 和朋", number:58, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/58.jpg"},
+{name:"Ｌ．ペルドモ", number:59, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/59.jpg"},
+{name:"本田 圭佑", number:60, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/60.jpg"},
+{name:"茶野 篤政", number:61, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/61.jpg"},
+{name:"大里 昂生", number:64, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/64.jpg"},
+{name:"福田 周平", number:65, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/65.jpg"},
+{name:"博志", number:66, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/66.jpg"},
+{name:"中川 圭太", number:67, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/67.jpg"},
+{name:"才木 海翔", number:95, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/95.jpg"},
+{name:"髙島 泰都", number:96, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/96.jpg"},
+{name:"杉本 裕太郎", number:99, team:"オリックス", url:"https://www.buffaloes.co.jp/media/sites/6/images/team/player/2025/99.jpg"},
+{name:"並木 秀尊", number:0, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000028.jpg?0731"},
+{name:"山田 哲人", number:1, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1000132.jpg?0731"},
+{name:"古賀 優大", number:2, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1600078.jpg?0731"},
+{name:"西川 遥輝", number:3, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1000100.jpg?0731"},
+{name:"丸山 和郁", number:4, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1650522.jpg?0731"},
+{name:"川端 慎吾", number:5, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/600011.jpg?0731"},
+{name:"長岡 秀樹", number:7, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1900028.jpg?0731"},
+{name:"塩見 泰隆", number:9, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700087.jpg?0731"},
+{name:"宮本 丈", number:10, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700089.jpg?0731"},
+{name:"石山 泰稚", number:12, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1200075.jpg?0731"},
+{name:"Ｊ．オスナ", number:13, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000133.jpg?0731"},
+{name:"清水 昇", number:17, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1800033.jpg?0731"},
+{name:"奥川 恭伸", number:18, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1900024.jpg?0731"},
+{name:"石川 雅規", number:19, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/12113.jpg?0731"},
+{name:"木澤 尚文", number:20, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000024.jpg?0731"},
+{name:"吉村 貢司郎", number:21, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2103794.jpg?0731"},
+{name:"星 知弥", number:24, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1600075.jpg?0731"},
+{name:"Ｄ．サンタナ", number:25, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000135.jpg?0731"},
+{name:"山野 太一", number:26, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000025.jpg?0731"},
+{name:"中村 悠平", number:27, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/900044.jpg?0731"},
+{name:"小川 泰弘", number:29, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1200076.jpg?0731"},
+{name:"松本 直樹", number:32, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700090.jpg?0731"},
+{name:"内山 壮真", number:33, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000026.jpg?0731"},
+{name:"田口 麗斗", number:34, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1300029.jpg?0731"},
+{name:"山野辺 翔", number:37, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1800082.jpg?0731"},
+{name:"北村 拓己", number:38, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700045.jpg?0731"},
+{name:"Ｐ．ランバート", number:39, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1961468.jpg?0731"},
+{name:"高梨 裕稔", number:40, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1300045.jpg?0731"},
+{name:"矢崎 拓也", number:41, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1600121.jpg?0731"},
+{name:"山本 大貴", number:43, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700094.jpg?0731"},
+{name:"大西 広樹", number:44, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1900027.jpg?0731"},
+{name:"小澤 怜史", number:45, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1500139.jpg?0731"},
+{name:"太田 賢吾", number:46, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1400124.jpg?0731"},
+{name:"高橋 奎二", number:47, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1500042.jpg?0731"},
+{name:"金久保 優斗", number:48, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700088.jpg?0731"},
+{name:"濱田 太貴", number:51, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1800036.jpg?0731"},
+{name:"原 樹理", number:52, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1500040.jpg?0731"},
+{name:"長谷川 宙輝", number:53, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1600169.jpg?0731"},
+{name:"村上 宗隆", number:55, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700084.jpg?0731"},
+{name:"武岡 龍世", number:60, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1900029.jpg?0731"},
+{name:"宮川 哲", number:61, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1900061.jpg?0731"},
+{name:"増田 珠", number:63, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700131.jpg?0731"},
+{name:"岩田 幸宏", number:64, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2103917.jpg?0731"},
+{name:"阪口 皓亮", number:66, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1700060.jpg?0731"},
+{name:"伊藤 琉偉", number:67, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2112175.jpg?0731"},
+{name:"丸山 翔大", number:68, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/2000033.jpg?0731"},
+{name:"青柳 晃洋", number:99, team:"ヤクルト", url:"https://www.yakult-swallows.co.jp/img/players/2025/1500090.jpg?0731"},
+{name:"荻野 貴司", number:0, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_0.jpg"},
+{name:"藤原 恭大", number:1, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_1.jpg"},
+{name:"松川 虎生", number:2, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_2.jpg"},
+{name:"角中 勝也", number:3, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_3.jpg"},
+{name:"友杉 篤輝", number:4, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_4.jpg"},
+{name:"安田 尚憲", number:5, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_5.jpg"},
+{name:"藤岡 裕大", number:7, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_7.jpg"},
+{name:"中村 奨吾", number:8, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_8.jpg"},
+{name:"澤村 拓一", number:11, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_11.jpg"},
+{name:"石川 歩", number:12, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_12.jpg"},
+{name:"小島 和哉", number:14, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_14.jpg"},
+{name:"美馬 学", number:15, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_15.jpg"},
+{name:"種市 篤暉", number:16, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_16.jpg"},
+{name:"二木 康太", number:18, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_18.jpg"},
+{name:"唐川 侑己", number:19, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_19.jpg"},
+{name:"Ｇ．ポランコ", number:22, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_22.jpg"},
+{name:"石川 慎吾", number:23, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_23.jpg"},
+{name:"東妻 勇輔", number:24, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_24.jpg"},
+{name:"岡 大海", number:25, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_25.jpg"},
+{name:"田村 龍弘", number:27, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_27.jpg"},
+{name:"菊地 吏玖", number:28, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_28.jpg"},
+{name:"西野 勇士", number:29, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_29.jpg"},
+{name:"廣畑 敦也", number:30, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_30.jpg"},
+{name:"佐藤 都志也", number:32, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_32.jpg"},
+{name:"八木 彬", number:33, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_33.jpg"},
+{name:"高野 脩汰", number:34, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_34.jpg"},
+{name:"坂本 光士郎", number:36, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_36.jpg"},
+{name:"小野 郁", number:37, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_37.jpg"},
+{name:"髙部 瑛斗", number:38, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_38.jpg"},
+{name:"大下 誠一郎", number:39, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_39.jpg"},
+{name:"西村 天裕", number:40, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_40.jpg"},
+{name:"石垣 雅海", number:43, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_43.jpg"},
+{name:"岩下 大輝", number:46, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_46.jpg"},
+{name:"鈴木 昭汰", number:47, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_47.jpg"},
+{name:"中村 稔弥", number:48, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_48.jpg"},
+{name:"愛斗", number:50, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_50.jpg"},
+{name:"山口 航輝", number:51, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_51.jpg"},
+{name:"益田 直也", number:52, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_52.jpg"},
+{name:"Ａ．ボス", number:54, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_54.jpg"},
+{name:"柿沼 友哉", number:55, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_55.jpg"},
+{name:"中森 俊介", number:56, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_56.jpg"},
+{name:"小川 龍成", number:57, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_57.jpg"},
+{name:"横山 陸人", number:60, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_60.jpg"},
+{name:"山本 大斗", number:61, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_61.jpg"},
+{name:"和田 康士朗", number:63, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_63.jpg"},
+{name:"寺地 隆成", number:65, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_65.jpg"},
+{name:"澤田 圭佑", number:66, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_66.jpg"},
+{name:"茶谷 健太", number:67, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_67.jpg"},
+{name:"国吉 佑樹", number:92, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_92.jpg"},
+{name:"Ｔ．ゲレーロ", number:97, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_97.jpg"},
+{name:"Ｎ．ソト", number:99, team:"ロッテ", url:"https://www.marines.co.jp/media/sites/5/team/player/2025/ph_player_2025_99.jpg"},
+{name:"桑原 将志", number:1, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/1.jpg"},
+{name:"牧 秀悟", number:2, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/2.jpg"},
+{name:"Ｔ．オースティン", number:3, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/3.jpg"},
+{name:"度会 隆輝", number:4, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/4.jpg"},
+{name:"松尾 汐恩", number:5, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/5.jpg"},
+{name:"森 敬斗", number:6, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/6.jpg"},
+{name:"佐野 恵太", number:7, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/7.jpg"},
+{name:"神里 和毅", number:8, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/8.jpg"},
+{name:"京田 陽太", number:9, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/9.jpg"},
+{name:"戸柱 恭孝", number:10, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/10.jpg"},
+{name:"東 克樹", number:11, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/11.jpg"},
+{name:"伊勢 大夢", number:13, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/13.jpg"},
+{name:"大貫 晋一", number:16, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/16.jpg"},
+{name:"三嶋 一輝", number:17, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/17.jpg"},
+{name:"山﨑 康晃", number:19, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/19.jpg"},
+{name:"坂本 裕哉", number:20, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/20.jpg"},
+{name:"入江 大生", number:22, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/22.jpg"},
+{name:"筒香 嘉智", number:25, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/25.jpg"},
+{name:"三森 大貴", number:26, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/26.jpg"},
+{name:"藤浪 晋太郎", number:27, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/27.jpg"},
+{name:"伊藤 光", number:29, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/29.jpg"},
+{name:"柴田 竜拓", number:31, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/31.jpg"},
+{name:"森 唯斗", number:38, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/38.jpg"},
+{name:"佐々木 千隼", number:41, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/41.jpg"},
+{name:"Ａ．ジャクソン", number:42, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/42.jpg"},
+{name:"石上 泰輝", number:44, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/44.jpg"},
+{name:"森原 康平", number:45, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/45.jpg"},
+{name:"京山 将弥", number:48, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/48.jpg"},
+{name:"山本 祐大", number:50, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/50.jpg"},
+{name:"宮﨑 敏郎", number:51, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/51.jpg"},
+{name:"浜地 真澄", number:52, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/52.jpg"},
+{name:"颯", number:53, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/53.jpg"},
+{name:"石田 裕太郎", number:54, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/54.jpg"},
+{name:"梶原 昂希", number:58, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/58.jpg"},
+{name:"平良 拳太郎", number:59, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/59.jpg"},
+{name:"知野 直人", number:60, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/60.jpg"},
+{name:"蝦名 達夫", number:61, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/61.jpg"},
+{name:"Ｒ．ウィック", number:62, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/62.jpg"},
+{name:"関根 大気", number:63, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/63.jpg"},
+{name:"中川 虎大", number:64, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/64.jpg"},
+{name:"宮城 滝太", number:65, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/65.jpg"},
+{name:"Ｄ．ビシエド", number:66, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/66.jpg"},
+{name:"Ａ．ケイ", number:69, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/69.jpg"},
+{name:"堀岡 隼人", number:92, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/92.jpg"},
+{name:"九鬼 隆平", number:95, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/116.jpg"},
+{name:"Ｔ．バウアー", number:96, team:"横浜", url:"https://www.jsports.co.jp/img/web/page/baseball/baystars/player/2025/96.jpg"},
+{name:"小深田 大翔", number:0, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/0.jpg"},
+{name:"宗山 塁", number:1, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/1.jpg"},
+{name:"太田 光", number:2, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/2.jpg"},
+{name:"浅村 栄斗", number:3, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/3.jpg"},
+{name:"阿部 寿樹", number:4, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/4.jpg"},
+{name:"村林 一輝", number:6, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/6.jpg"},
+{name:"鈴木 大地", number:7, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/7.jpg"},
+{name:"辰己 涼介", number:8, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/8.jpg"},
+{name:"岸 孝之", number:11, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/11.jpg"},
+{name:"Ｏ．ゴンザレス", number:12, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/12.jpg"},
+{name:"則本 昂大", number:14, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/14.jpg"},
+{name:"古謝 樹", number:17, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/17.jpg"},
+{name:"荘司 康誠", number:19, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/19.jpg"},
+{name:"Ｎ．ターリー", number:20, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/20.jpg"},
+{name:"早川 隆久", number:21, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/21.jpg"},
+{name:"Ｍ．フランコ", number:23, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/23.jpg"},
+{name:"黒川 史陽", number:24, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/24.jpg"},
+{name:"田中 和基", number:25, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/25.jpg"},
+{name:"岡島 豪郎", number:27, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/27.jpg"},
+{name:"酒居 知史", number:28, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/28.jpg"},
+{name:"渡辺 翔太", number:31, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/31.jpg"},
+{name:"中島 大輔", number:32, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/32.jpg"},
+{name:"山﨑 剛", number:34, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/34.jpg"},
+{name:"島内 宏明", number:35, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/35.jpg"},
+{name:"弓削 隼人", number:38, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/38.jpg"},
+{name:"伊藤 裕季也", number:39, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/39.jpg"},
+{name:"加治屋 蓮", number:41, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/41.jpg"},
+{name:"山田 遥楓", number:42, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/42.jpg"},
+{name:"宋 家豪", number:43, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/43.jpg"},
+{name:"田中 貴也", number:44, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/44.jpg"},
+{name:"松井 友飛", number:45, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/45.jpg"},
+{name:"藤平 尚真", number:46, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/46.jpg"},
+{name:"藤井 聖", number:47, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/47.jpg"},
+{name:"渡邊 佳明", number:48, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/48.jpg"},
+{name:"西垣 雅矢", number:49, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/49.jpg"},
+{name:"武藤 敦貴", number:50, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/50.jpg"},
+{name:"小郷 裕哉", number:51, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/51.jpg"},
+{name:"津留﨑 大成", number:52, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/52.jpg"},
+{name:"安田 悠馬", number:55, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/55.jpg"},
+{name:"鈴木 翔天", number:56, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/56.jpg"},
+{name:"瀧中 瞭太", number:57, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/57.jpg"},
+{name:"辛島 航", number:58, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/58.jpg"},
+{name:"西口 直人", number:62, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/62.jpg"},
+{name:"堀内 謙伍", number:65, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/65.jpg"},
+{name:"今野 龍太", number:66, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/66.jpg"},
+{name:"内 星龍", number:69, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/69.jpg"},
+{name:"石原 彪", number:70, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/70.jpg"},
+{name:"宮森 智志", number:72, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/72.jpg"},
+{name:"Ｍ．ヤフーレ", number:89, team:"楽天", url:"https://www.rakuteneagles.jp/media/sites/3/team/player/2025/89.jpg"},
+{name:"増田 大輝", number:0, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/000_51855132.jpg"},
+{name:"吉川 尚輝", number:2, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/002_73375134.jpg"},
+{name:"門脇 誠", number:5, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/005_11515157.jpg"},
+{name:"坂本 勇人", number:6, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/006_51955114.jpg"},
+{name:"長野 久義", number:7, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/007_91995131.jpg"},
+{name:"丸 佳浩", number:8, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/008_21425116.jpg"},
+{name:"甲斐 拓也", number:10, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/010_91595133.jpg"},
+{name:"田中 将大", number:11, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/011_11215114.jpg"},
+{name:"萩尾 匡也", number:12, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/012_81485157.jpg"},
+{name:"Ｔ．キャベッジ", number:13, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/013_73575150.jpg"},
+{name:"大勢", number:15, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/015_81085155.jpg"},
+{name:"西舘 勇陽", number:17, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/017_31635159.jpg"},
+{name:"山﨑 伊織", number:19, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/019_03305153.jpg"},
+{name:"戸郷 翔征", number:20, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/020_41045138.jpg"},
+{name:"小林 誠司", number:22, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/022_91795139.jpg"},
+{name:"大城 卓三", number:24, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/024_21325136.jpg"},
+{name:"岡本 和真", number:25, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/025_11515130.jpg"},
+{name:"今村 信貴", number:26, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/026_31335135.jpg"},
+{name:"岸田 行倫", number:27, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/027_91595136.jpg"},
+{name:"高橋 礼", number:28, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/028_01005136.jpg"},
+{name:"Ｆ．グリフィン", number:29, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/029_03705157.jpg"},
+{name:"近藤 大亮", number:30, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/030_81785132.jpg"},
+{name:"赤星 優志", number:31, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/031_51155155.jpg"},
+{name:"Ｋ．ケラー", number:33, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/033_73975155.jpg"},
+{name:"泉口 友汰", number:35, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/035_61165159.jpg"},
+{name:"馬場 皐輔", number:36, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/036_41445136.jpg"},
+{name:"郡 拓也", number:37, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/037_91795134.jpg"},
+{name:"岡田 悠希", number:38, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/038_81385155.jpg"},
+{name:"中山 礼都", number:40, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/040_51655153.jpg"},
+{name:"中川 皓太", number:41, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/041_81285132.jpg"},
+{name:"Ｅ．ヘルナンデス", number:42, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/042_33235159.jpg"},
+{name:"重信 慎之介", number:43, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/043_21925132.jpg"},
+{name:"佐々木 俊輔", number:44, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/044_51955159.jpg"},
+{name:"田中 瑛斗", number:45, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/045_61065136.jpg"},
+{name:"Ａ．バルドナード", number:49, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/049_23225157.jpg"},
+{name:"オコエ 瑠偉", number:50, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/050_01505132.jpg"},
+{name:"浅野 翔吾", number:51, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/051_91195157.jpg"},
+{name:"リチャード", number:52, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/052_11015136.jpg"},
+{name:"高梨 雄平", number:53, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/053_91095134.jpg"},
+{name:"乙坂 智", number:54, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/054_41345135.jpg"},
+{name:"船迫 大雅", number:58, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/058_31835157.jpg"},
+{name:"若林 楽人", number:59, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/059_53555153.jpg"},
+{name:"増田 陸", number:61, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/061_01605138.jpg"},
+{name:"横川 凱", number:62, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/062_81885138.jpg"},
+{name:"泉 圭輔", number:63, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/063_01105138.jpg"},
+{name:"石川 達也", number:65, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/065_61165153.jpg"},
+{name:"平内 龍太", number:66, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/066_21825153.jpg"},
+{name:"菊地 大稀", number:68, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/068_31735155.jpg"},
+{name:"堀田 賢慎", number:91, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/091_21625151.jpg"},
+{name:"Ｒ．マルティネス", number:92, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/092_23925134.jpg"},
+{name:"井上 温大", number:97, team:"巨人", url:"https://p.npb.jp/players_photo/2025/180/g/097_51355151.jpg"},
+{name:"上本 崇司", number:0, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i0.jpg"},
+{name:"田中 広輔", number:2, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i2.jpg"},
+{name:"矢野 雅哉", number:4, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i4.jpg"},
+{name:"小園 海斗", number:5, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i5.jpg"},
+{name:"堂林 翔太", number:7, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i7.jpg"},
+{name:"秋山 翔吾", number:9, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o9.jpg"},
+{name:"大道 温貴", number:12, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p12.jpg"},
+{name:"森浦 大輔", number:13, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p13.jpg"},
+{name:"大瀬良 大地", number:14, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p14.jpg"},
+{name:"森 翔平", number:16, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p16.jpg"},
+{name:"森下 暢仁", number:18, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p18.jpg"},
+{name:"床田 寛樹", number:19, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p19.jpg"},
+{name:"栗林 良吏", number:20, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p20.jpg"},
+{name:"中﨑 翔太", number:21, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p21.jpg"},
+{name:"黒原 拓未", number:24, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p24.jpg"},
+{name:"會澤 翼", number:27, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/c27.jpg"},
+{name:"ケムナ 誠", number:29, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p29.jpg"},
+{name:"坂倉 将吾", number:31, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/c31.jpg"},
+{name:"石原 貴規", number:32, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/c32.jpg"},
+{name:"菊池 涼介", number:33, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i33.jpg"},
+{name:"高橋 昂也", number:34, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p34.jpg"},
+{name:"塹江 敦哉", number:36, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p36.jpg"},
+{name:"野間 峻祥", number:37, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o37.jpg"},
+{name:"宇草 孔基", number:38, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o38.jpg"},
+{name:"磯村 嘉孝", number:40, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/c40.jpg"},
+{name:"鈴木 健矢", number:41, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p41.jpg"},
+{name:"島内 颯太郎", number:43, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p43.jpg"},
+{name:"林 晃汰", number:44, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i44.jpg"},
+{name:"松本 竜也", number:45, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p45.jpg"},
+{name:"アドゥワ 誠", number:48, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p48.jpg"},
+{name:"中村 健人", number:50, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o50.jpg"},
+{name:"末包 昇大", number:52, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o52.jpg"},
+{name:"岡本 駿", number:53, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p53.jpg"},
+{name:"松山 竜平", number:55, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o55.jpg"},
+{name:"大盛 穂", number:59, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o59.jpg"},
+{name:"Ｓ．ファビアン", number:61, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o61.jpg"},
+{name:"玉村 昇悟", number:65, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p65.jpg"},
+{name:"遠藤 淳志", number:66, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p66.jpg"},
+{name:"Ｔ．ハーン", number:68, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/p68.jpg"},
+{name:"山足 達也", number:69, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i69.jpg"},
+{name:"中村 奨成", number:96, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/o96.jpg"},
+{name:"二俣 翔一", number:99, team:"広島", url:"https://www.carp.co.jp/team25/member/photos/i99.jpg"},
+{name:"木浪 聖也", number:0, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/0.jpg"},
+{name:"森下 翔太", number:1, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/1.jpg"},
+{name:"梅野 隆太郎", number:2, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/2.jpg"},
+{name:"大山 悠輔", number:3, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/3.jpg"},
+{name:"熊谷 敬宥", number:4, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/4.jpg"},
+{name:"近本 光司", number:5, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/5.jpg"},
+{name:"佐藤 輝明", number:8, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/8.jpg"},
+{name:"坂本 誠志郎", number:12, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/12.jpg"},
+{name:"岩崎 優", number:13, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/13.jpg"},
+{name:"岩貞 祐太", number:14, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/14.jpg"},
+{name:"西 純矢", number:15, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/15.jpg"},
+{name:"西 勇輝", number:16, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/16.jpg"},
+{name:"渡邉 諒", number:25, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/25.jpg"},
+{name:"伊藤 将司", number:27, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/27.jpg"},
+{name:"髙橋 遥人", number:29, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/29.jpg"},
+{name:"糸原 健斗", number:33, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/33.jpg"},
+{name:"漆原 大晟", number:34, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/34.jpg"},
+{name:"才木 浩人", number:35, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/35.jpg"},
+{name:"畠 世周", number:36, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/36.jpg"},
+{name:"及川 雅貴", number:37, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/37.jpg"},
+{name:"小幡 竜平", number:38, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/38.jpg"},
+{name:"榮枝 裕貴", number:39, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/39.jpg"},
+{name:"村上 頌樹", number:41, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/41.jpg"},
+{name:"島本 浩也", number:46, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/46.jpg"},
+{name:"桐敷 拓馬", number:47, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/47.jpg"},
+{name:"大竹 耕太郎", number:49, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/49.jpg"},
+{name:"富田 蓮", number:50, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/50.jpg"},
+{name:"中野 拓夢", number:51, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/51.jpg"},
+{name:"島田 海吏", number:53, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/53.jpg"},
+{name:"楠本 泰史", number:55, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/55.jpg"},
+{name:"長坂 拳弥", number:57, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/57.jpg"},
+{name:"前川 右京", number:58, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/58.jpg"},
+{name:"小野寺 暖", number:60, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/60.jpg"},
+{name:"豊田 寛", number:61, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/61.jpg"},
+{name:"植田 海", number:62, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/62.jpg"},
+{name:"岡留 英貴", number:64, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/64.jpg"},
+{name:"湯浅 京己", number:65, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/65.jpg"},
+{name:"髙寺 望夢", number:67, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/67.jpg"},
+{name:"石井 大智", number:69, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/69.jpg"},
+{name:"Ｒ．ドリス", number:85, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/85.jpg"},
+{name:"Ｊ．ビーズリー", number:99, team:"阪神", url:"https://hanshintigers.jp/data/img/player_images2025/99.jpg"},
+{name:"児玉 亮涼", number:0, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player0.jpg"},
+{name:"栗山 巧", number:1, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player01.jpg"},
+{name:"外崎 修汰", number:5, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player05.jpg"},
+{name:"源田 壮亮", number:6, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player06.jpg"},
+{name:"蛭間 拓哉", number:9, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player09.jpg"},
+{name:"渡邉 勇太朗", number:12, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player12.jpg"},
+{name:"髙橋 光成", number:13, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player13.jpg"},
+{name:"與座 海人", number:15, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player15.jpg"},
+{name:"隅田 知一郎", number:16, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player16.jpg"},
+{name:"松本 航", number:17, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player17.jpg"},
+{name:"佐藤 隼輔", number:19, team:"西武", url:"https://www.seibulions.jp/media/sites/4/news/25/02/ph_player19.jpg"},
+{name:"田村 伊知郎", number:20, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player20.jpg"},
+{name:"武内 夏暉", number:21, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player21.jpg"},
+{name:"古賀 悠斗", number:22, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player22.jpg"},
+{name:"Ｔ．ネビン", number:26, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player26.jpg"},
+{name:"炭谷 銀仁朗", number:27, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player27.jpg"},
+{name:"青山 美夏人", number:29, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player29.jpg"},
+{name:"元山 飛優", number:30, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player30.jpg"},
+{name:"平沼 翔太", number:31, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player31.jpg"},
+{name:"山村 崇嘉", number:32, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player32.jpg"},
+{name:"甲斐野 央", number:34, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player34.jpg"},
+{name:"松原 聖弥", number:35, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player35.jpg"},
+{name:"山田 陽翔", number:36, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player36.jpg"},
+{name:"柘植 世那", number:37, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player37.jpg"},
+{name:"平沢 大河", number:39, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player39.jpg"},
+{name:"ボー・タカハシ", number:42, team:"西武", url:"https://www.seibulions.jp/media/sites/4/news/25/02/ph_player42.jpg"},
+{name:"羽田 慎之介", number:43, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player43.jpg"},
+{name:"Ｔ．ウィンゲンター", number:45, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player45.jpg"},
+{name:"今井 達也", number:48, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player48.jpg"},
+{name:"佐々木 健", number:49, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player115.jpg"},
+{name:"髙松 渡", number:50, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player50.jpg"},
+{name:"西川 愛也", number:51, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player51.jpg"},
+{name:"牧野 翔矢", number:53, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player53.jpg"},
+{name:"黒木 優太", number:54, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player136.jpg"},
+{name:"中村 祐太", number:58, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player58.jpg"},
+{name:"中村 剛也", number:60, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player60.jpg"},
+{name:"平良 海馬", number:61, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player61.jpg"},
+{name:"滝澤 夏央", number:62, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player62.jpg"},
+{name:"長谷川 信哉", number:63, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player63.jpg"},
+{name:"古市 尊", number:65, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player65.jpg"},
+{name:"野村 大樹", number:67, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player67.jpg"},
+{name:"岸 潤一郎", number:68, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player68.jpg"},
+{name:"水上 由伸", number:69, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player69.jpg"},
+{name:"浜屋 将太", number:90, team:"西武", url:"https://www.seibulions.jp/media/sites/4/player/2025/ph_player111.jpg"},
+{name:"岡林 勇希", number:1, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/1.jpg"},
+{name:"田中 幹也", number:2, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/2.jpg"},
+{name:"高橋 周平", number:3, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/3.jpg"},
+{name:"Ｏ．カリステ", number:4, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/4.jpg"},
+{name:"村松 開人", number:5, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/5.jpg"},
+{name:"中田 翔", number:6, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/6.jpg"},
+{name:"福永 裕基", number:7, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/7.jpg"},
+{name:"大島 洋平", number:8, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/8.jpg"},
+{name:"石伊 雄太", number:9, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/9.jpg"},
+{name:"岡田 俊哉", number:11, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/210.jpg"},
+{name:"橋本 侑樹", number:13, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/13.jpg"},
+{name:"柳 裕也", number:17, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/17.jpg"},
+{name:"梅津 晃大", number:18, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/18.jpg"},
+{name:"髙橋 宏斗", number:19, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/19.jpg"},
+{name:"涌井 秀章", number:20, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/20.jpg"},
+{name:"大野 雄大", number:22, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/22.jpg"},
+{name:"Ｊ．ボスラー", number:24, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/24.jpg"},
+{name:"石川 昂弥", number:25, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/25.jpg"},
+{name:"森 博人", number:28, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/28.jpg"},
+{name:"根尾 昂", number:30, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/30.jpg"},
+{name:"伊藤 茉央", number:32, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/32.jpg"},
+{name:"祖父江 大輔", number:33, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/33.jpg"},
+{name:"福 敬登", number:34, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/34.jpg"},
+{name:"松葉 貴大", number:38, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/38.jpg"},
+{name:"宇佐見 真吾", number:39, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/39.jpg"},
+{name:"勝野 昌慶", number:41, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/41.jpg"},
+{name:"ブライト 健太", number:42, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/42.jpg"},
+{name:"川越 誠司", number:44, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/44.jpg"},
+{name:"土田 龍空", number:45, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/45.jpg"},
+{name:"梅野 雄吾", number:46, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/46.jpg"},
+{name:"加藤 匠馬", number:49, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/49.jpg"},
+{name:"清水 達也", number:50, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/50.jpg"},
+{name:"上林 誠知", number:51, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/51.jpg"},
+{name:"駿太", number:53, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/53.jpg"},
+{name:"藤嶋 健人", number:54, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/54.jpg"},
+{name:"細川 成也", number:55, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/55.jpg"},
+{name:"石橋 康太", number:58, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/58.jpg"},
+{name:"齋藤 綱記", number:59, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/59.jpg"},
+{name:"山本 泰寛", number:60, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/60.jpg"},
+{name:"板山 祐太郎", number:63, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/63.jpg"},
+{name:"佐藤 龍世", number:65, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/65.jpg"},
+{name:"鵜飼 航丞", number:66, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/66.jpg"},
+{name:"松山 晋也", number:90, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/90.jpg"},
+{name:"Ｈ．メヒア", number:91, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/91.jpg"},
+{name:"樋口 正修", number:97, team:"中日", url:"https://www.jsports.co.jp/img/web/page/baseball/dragons/player/2025/97.jpg"},
+{name:"Ａ．マルティネス", number:2, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/002_73975136.jpg"},
+{name:"上川畑 大悟", number:4, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/004_01505155.jpg"},
+{name:"野村 佑希", number:5, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/005_31435138.jpg"},
+{name:"松本 剛", number:7, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/007_21625135.jpg"},
+{name:"淺間 大基", number:8, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/008_31135130.jpg"},
+{name:"中島 卓也", number:9, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/009_11215118.jpg"},
+{name:"清水 優心", number:10, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/010_61965130.jpg"},
+{name:"矢澤 宏太", number:12, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/012_73375157.jpg"},
+{name:"生田目 翼", number:13, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/013_41245138.jpg"},
+{name:"加藤 貴之", number:14, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/014_41545132.jpg"},
+{name:"北山 亘基", number:15, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/015_51755155.jpg"},
+{name:"伊藤 大海", number:17, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/017_51355153.jpg"},
+{name:"山﨑 福也", number:18, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/018_21825130.jpg"},
+{name:"玉井 大翔", number:19, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/019_91295134.jpg"},
+{name:"上原 健太", number:20, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/020_41345132.jpg"},
+{name:"清宮 幸太郎", number:21, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/021_41545136.jpg"},
+{name:"杉浦 稔大", number:22, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/022_61765139.jpg"},
+{name:"伏見 寅威", number:23, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/023_61065137.jpg"},
+{name:"金村 尚真", number:24, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/024_51555157.jpg"},
+{name:"宮西 尚生", number:25, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/025_41445116.jpg"},
+{name:"田中 正義", number:26, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/026_31235134.jpg"},
+{name:"河野 竜生", number:28, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/028_81785151.jpg"},
+{name:"郡司 裕也", number:30, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/030_21925151.jpg"},
+{name:"堀 瑞輝", number:34, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/034_51855134.jpg"},
+{name:"石井 一成", number:38, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/038_21125134.jpg"},
+{name:"福田 俊", number:40, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/040_11615138.jpg"},
+{name:"水野 達稀", number:43, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/043_63165155.jpg"},
+{name:"Ｄ．バーヘイゲン", number:45, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/045_33735151.jpg"},
+{name:"齋藤 友貴哉", number:48, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/048_21725138.jpg"},
+{name:"若林 晃弘", number:49, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/049_13315136.jpg"},
+{name:"五十幡 亮汰", number:50, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/050_11315153.jpg"},
+{name:"石川 直也", number:51, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/051_61165130.jpg"},
+{name:"池田 隆英", number:52, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/052_01105134.jpg"},
+{name:"水谷 瞬", number:53, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/053_31835138.jpg"},
+{name:"細川 凌平", number:56, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/056_61865153.jpg"},
+{name:"奈良間 大己", number:58, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/058_31435157.jpg"},
+{name:"今川 優馬", number:61, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/061_21325153.jpg"},
+{name:"田宮 裕涼", number:64, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/064_51055138.jpg"},
+{name:"万波 中正", number:66, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/066_11815138.jpg"},
+{name:"山本 拓実", number:67, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/067_03105136.jpg"},
+{name:"柳川 大晟", number:95, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/095_63365155.jpg"},
+{name:"Ｆ．レイエス", number:99, team:"日ハム", url:"https://p.npb.jp/players_photo/2025/180/f/099_73075159.jpg"},
+{name:"川瀬 晃", number:0, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/0_01.jpg"},
+{name:"Ｃ．スチュワート・ジュニア", number:2, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/2_01.jpg"},
+{name:"近藤 健介", number:3, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/3_01.jpg"},
+{name:"山川 穂高", number:5, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/5_01.jpg"},
+{name:"今宮 健太", number:6, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/6_01.jpg"},
+{name:"中村 晃", number:7, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/7_01.jpg"},
+{name:"牧原 大成", number:8, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/8_01.jpg"},
+{name:"柳田 悠岐", number:9, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/9_01.jpg"},
+{name:"上沢 直之", number:10, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/10_01.jpg"},
+{name:"津森 宥紀", number:11, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/11_01.jpg"},
+{name:"嶺井 博希", number:12, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/12_01.jpg"},
+{name:"濵口 遥大", number:13, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/13_01.jpg"},
+{name:"又吉 克樹", number:14, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/14_01.jpg"},
+{name:"東浜 巨", number:16, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/16_01.jpg"},
+{name:"有原 航平", number:17, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/17_01.jpg"},
+{name:"武田 翔太", number:18, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/18_01.jpg"},
+{name:"周東 佑京", number:23, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/23_01.jpg"},
+{name:"栗原 陵矢", number:24, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/24_01.jpg"},
+{name:"大津 亮介", number:26, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/26_01.jpg"},
+{name:"大江 竜聖", number:29, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/29_01.jpg"},
+{name:"佐藤 直樹", number:30, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/30_01.jpg"},
+{name:"正木 智也", number:31, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/31_01.jpg"},
+{name:"柳町 達", number:32, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/32_01.jpg"},
+{name:"Ｌ．モイネロ", number:35, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/35_01.jpg"},
+{name:"尾形 崇斗", number:39, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/39_01.jpg"},
+{name:"杉山 一樹", number:40, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/40_01.jpg"},
+{name:"谷川原 健太", number:45, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/45_01.jpg"},
+{name:"大関 友久", number:47, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/47_01.jpg"},
+{name:"藤井 皓哉", number:48, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/48_01.jpg"},
+{name:"松本 晴", number:49, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/49_01.jpg"},
+{name:"板東 湧梧", number:50, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/50_01.jpg"},
+{name:"秋広 優人", number:52, team:"福岡", url:"https://p.npb.jp/players_photo/2025/180/h/052_71175153.jpg"},
+{name:"大山 凌", number:53, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/53_01.jpg"},
+{name:"Ｒ．オスナ", number:54, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/54_01.jpg"},
+{name:"田浦 文丸", number:56, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/56_01.jpg"},
+{name:"緒方 理貢", number:57, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/57_01.jpg"},
+{name:"長谷川 威展", number:59, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/59_01.jpg"},
+{name:"川村 友斗", number:61, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/61_01.jpg"},
+{name:"海野 隆司", number:62, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/62_01.jpg"},
+{name:"Ｄ．ヘルナンデス", number:63, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/63_01.jpg"},
+{name:"上茶谷 大河", number:64, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/64_01.jpg"},
+{name:"松本 裕樹", number:66, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/66_01.jpg"},
+{name:"野村 勇", number:99, team:"福岡", url:"https://www.softbankhawks.co.jp/media/sites/7/team/player/2025/99_01.jpg"}
+    ];
+
+    let currentAnswer = 0;
+    let currentPlayers = [];
+    let score = 0;
+    let questionCount = 0;
+    const totalQuestions = 10;
+
+    function startGame() {
+      score = 0;
+      questionCount = 0;
+      document.getElementById("score").textContent = score;
+      document.getElementById("currentQ").textContent = 1;
+      document.getElementById("gameover").textContent = "";
+
+      // クイズエリアを再表示
+      document.getElementById("quiz").style.display = "block";
+
+      newQuestion();
+    }
+
+    function newQuestion() {
+  if (questionCount >= totalQuestions) {
+    endGame();
+    return;
+  }
+
+  const p1 = players[Math.floor(Math.random() * players.length)];
+  const p2 = players[Math.floor(Math.random() * players.length)];
+  currentPlayers = [p1, p2]; // 
+
+  document.getElementById("player1").src = p1.url;
+  document.getElementById("player2").src = p2.url;
+
+  // 前回の表示をリセット
+  document.getElementById("player1-info").textContent = '';
+  document.getElementById("player2-info").textContent = '';
+  document.getElementById("result").textContent = '';
+  document.getElementById("answer").value = "";
+
+  // 足し算一本化
+  currentAnswer = p1.number + p2.number;
+}
+
+    function checkAnswer() {
+      const ans = parseInt(document.getElementById("answer").value);
+      const resultText = ans === currentAnswer ? "正解！🎉" : `不正解！答えは ${currentAnswer} です`;
+      document.getElementById("result").textContent = resultText;
+
+      // 正解ならスコア加点
+      if (ans === currentAnswer) {
+        score++;
+        document.getElementById("score").textContent = score;
+      }
+
+      // 名前と背番号を表示
+      document.getElementById("player1-info").textContent = `${currentPlayers[0].name}（背番号 ${currentPlayers[0].number}）`;
+      document.getElementById("player2-info").textContent = `${currentPlayers[1].name}（背番号 ${currentPlayers[1].number}）`;
+    }
+
+    function nextQuestion() {
+      questionCount++;
+      if (questionCount < totalQuestions) {
+        document.getElementById("currentQ").textContent = questionCount + 1;
+        newQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+function endGame() {
+  // クイズの画像エリアを非表示
+  document.getElementById("quiz").style.display = "none";
+
+  // 解答欄・ボタンも非表示
+  document.getElementById("answer").style.display = "none";
+  document.querySelector("button[onclick='checkAnswer()']").style.display = "none";
+  document.querySelector("button[onclick='nextQuestion()']").style.display = "none";
+
+  // 「正解！/ 不正解！」の表示を消す
+  document.getElementById("result").textContent = "";
+
+  // スコアを表示
+  document.getElementById("gameover").textContent =
+    `ゲーム終了！あなたのスコアは ${score} / ${totalQuestions} です🎊`;
+}
+
+    // 最初にゲーム開始
+    startGame();
+  </script>
+</body>
+</html>
